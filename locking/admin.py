@@ -94,9 +94,9 @@ def get_lock_for_admin(self_obj, obj):
 	
 	if self_obj.request.user.has_perm(u'blog.unlock_post'): 
 	
-		return u'<a href="#" class="lock-status %s" title="Locked By: %s">%s</a><!-- %s -- %s -- %s -- %s -->' % (class_name, locked_by, output, __module__[0:obj.__module__.find('.')], obj.id, obj.__class__.__name__.lower(), lock.locked_by.display_name)
+		return u'<a href="#" class="lock-status %s" title="Locked By: %s">%s</a><!-- %s -- %s -- %s -->' % (class_name, locked_by, output, obj.__module__[0:obj.__module__.find('.')], obj.id, obj.__class__.__name__.lower())
 	else: 
-		return u'<span class="lock-status %s" title="Locked By: %s">%s</span><!-- %s -- %s -- %s -- %s -->' % (class_name, locked_by, output, __module__[0:obj.__module__.find('.')], obj.id, obj.__class__.__name__.lower(), lock.locked_by.display_name)
+		return u'<span class="lock-status %s" title="Locked By: %s">%s</span><!-- %s -- %s -- %s  -->' % (class_name, locked_by, output, obj.__module__[0:obj.__module__.find('.')], obj.id, obj.__class__.__name__.lower())
 		
 get_lock_for_admin.allow_tags = True
 get_lock_for_admin.short_description = 'Lock'
