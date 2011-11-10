@@ -7,37 +7,13 @@ from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext as _
 from django import forms
+from django.contrib.contenttypes.models import ContentType
 
 from locking import LOCK_TIMEOUT, views
 from locking.models import Lock
 
 class LockableAdmin(admin.ModelAdmin):
-#     @property
-#     class Media:
-#         # because reverse() doesn't yet work when this module is first loaded
-#         # (the urlconf still has to load at that point) the media definition
-#         # has to be dynamic, and we can't simply add a Media class to the
-#         # ModelAdmin as you usually would.
-#         #
-#         # Doing so would result in an ImproperlyConfigured exception, stating
-#         # "The included urlconf doesn't have any patterns in it."
-#         # 
-#         # See http://docs.djangoproject.com/en/dev/topics/forms/media/#media-as-a-dynamic-property
-#         # for more information about dynamic media definitions.
-#         
-#         css = {
-#             'all': ('locking/css/locking.css',)
-#             }
-#         js = (
-#             'http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js', 
-#             'locking/js/jquery.url.packed.js',
-#             #reverse('django.views.i18n.javascript_catalog'),
-#             #reverse('locking_variables'),
-#             'locking/js/admin.locking.js',
-#             )
-        
-        #return forms.Media(css=css, js=js)
-    
+   
     def changelist_view(self, request, extra_context=None):
         # we need the request objects in a few places where it's usually not present, 
         # so we're tacking it on to the LockableAdmin class
@@ -81,8 +57,11 @@ def get_lock_for_admin(self_obj, obj):
 	'''
 	
 	locked_by = ''
+	
+	content_type = ContentType.objects.get_for_model(obj)
+	
 	try:
-		lock = Lock.objects.get(entry_id=obj.id, app=obj.__module__[0:obj.__module__.find('.')], model=obj.__class__.__name__.lower())
+		lock = Lock.objects.get(entry_id=obj.id, app=content_type.app_label, model=content_type.model)
 		class_name = 'locked'
 		locked_by = lock.locked_by.display_name
 	except Lock.DoesNotExist:
@@ -94,9 +73,9 @@ def get_lock_for_admin(self_obj, obj):
 	
 	if self_obj.request.user.has_perm(u'blog.unlock_post'): 
 	
-		return u'<a href="#" class="lock-status %s" title="Locked By: %s">%s</a><!-- %s -- %s -- %s -->' % (class_name, locked_by, output, obj.__module__[0:obj.__module__.find('.')], obj.id, obj.__class__.__name__.lower())
+		return u'<a href="#" class="lock-status %s" title="Locked By: %s">%s</a>' % (class_name, locked_by, output)
 	else: 
-		return u'<span class="lock-status %s" title="Locked By: %s">%s</span><!-- %s -- %s -- %s  -->' % (class_name, locked_by, output, obj.__module__[0:obj.__module__.find('.')], obj.id, obj.__class__.__name__.lower())
+		return u'<span class="lock-status %s" title="Locked By: %s">%s</span>' % (class_name, locked_by, output)
 		
 get_lock_for_admin.allow_tags = True
 get_lock_for_admin.short_description = 'Lock'
