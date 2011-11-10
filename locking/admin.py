@@ -81,12 +81,11 @@ def get_lock_for_admin(self_obj, obj):
 	'''
 	
 	locked_by = ''
-	
 	try:
 		lock = Lock.objects.get(entry_id=obj.id, app=obj.__module__[0:obj.__module__.find('.')], model=obj.__class__.__name__)
 		class_name = 'locked'
 		locked_by = lock.locked_by.display_name
-	except:
+	except Lock.DoesNotExist:
 		class_name = 'unlocked'
 	
 	img_path = 	settings.ADMIN_MEDIA_PREFIX + 'blog/img/'
