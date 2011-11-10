@@ -96,7 +96,7 @@ def get_lock_for_admin(self_obj, obj):
 	
 		return '<a href="#" class="lock-status ' + class_name + '" title="Locked By: ' + locked_by + '" >' + output  + '</a>'
 	else: 
-		return '<span class="lock-status ' + class_name + '" title="Locked By: ' + locked_by + '">' + output  + '</span><!-- ' + __module__[0:obj.__module__.find('.')] + ' -- ' + obj.id + ' -- ' + obj.__class__.__name__.lower()) + ' -- ' + lock.locked_by.display_name + ' -->'
+		return u'<span class="lock-status %s" title="Locked By: %s">%s</span><!-- %s -- %s -- %s -- %s -->' % (class_name, locked_by, output, __module__[0:obj.__module__.find('.')], obj.id, obj.__class__.__name__.lower(), lock.locked_by.display_name)
 		
 get_lock_for_admin.allow_tags = True
 get_lock_for_admin.short_description = 'Lock'
