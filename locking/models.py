@@ -8,8 +8,9 @@ class ObjectLockedError(IOError):
 	pass
 
 class Lock(models.Model):
-	""" LockableModel comes with three managers: ``objects``, ``locked`` and 
-	``unlocked``. They do what you'd expect them to. """
+	""" 
+	Main model for the locking app, has properties for the app/model/object that the lock is for and the time/person doing the locking
+	"""
 
 	class Meta:
 		unique_together = (("app", "model", "entry_id"),)
@@ -44,21 +45,7 @@ class Lock(models.Model):
 	
 	@property
 	def locked_by(self):
-		"""``locked_by`` is a foreign key to ``auth.User``. The ``related_name`` on the 
-		User object is ``working_on_%(class)s``. Read-only."""
 		return self._locked_by
-	
-	@property
-	def lock_type(self):
-		""" Returns the type of lock that is currently active. Either
-		``hard``, ``soft`` or ``None``. Read-only. """
-		if self.is_locked:
-			if self._hard_lock:
-				return "hard"
-			else:
-				return "soft"
-		else:
-			return None
 
 	@property
 	def is_locked(self):
@@ -81,16 +68,7 @@ class Lock(models.Model):
 	
 	def lock_for(self, user, hard_lock=False):
 		"""
-		Together with ``unlock_for`` this is probably the most important method 
-		on this model. If applicable to your use-case, you should lock for a specific 
-		user; that way, we can throw an exception when another user tries to unlock
-		an object they haven't locked themselves.
-		
-		When using soft locks (the default), any process can still use the save method
-		on this object. If you set ``hard_lock=True``, trying to save an object
-		without first unlocking will raise an ``ObjectLockedError``.
-		
-		Don't use hard locks unless you really need them. See :doc:`design`.
+		Lock for a specific user
 		"""
 
 		if not isinstance(user, auth.User):
@@ -117,12 +95,7 @@ class Lock(models.Model):
 	
 	def unlock_for(self, user):
 		"""
-		See ``lock_for``. If the lock was initiated for a specific user, 
-		unlocking will fail unless that same user requested the unlocking. 
-		Manual overrides should use the ``unlock`` method instead.
-		
-		Will raise a ObjectLockedError exception when the current user isn't authorized to
-		unlock the object.
+		Unlock for a specific user
 		"""
 	
 		self.unlock()
