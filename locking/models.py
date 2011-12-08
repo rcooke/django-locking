@@ -1,15 +1,11 @@
-# encoding: utf-8
-
 from datetime import datetime
 
 from django.db import models
-from django.conf import settings
 try:
 	from account import models as auth
 except:
 	from django.contrib.auth import models as auth
 from locking import LOCK_TIMEOUT, logger
-import managers
 
 class ObjectLockedError(IOError):
 	pass
@@ -20,12 +16,6 @@ class Lock(models.Model):
 
 	class Meta:
 		unique_together = (("app", "model", "entry_id"),)
-
-	objects = managers.Manager()
-	
-	locked = managers.LockedManager()
-	
-	unlocked = managers.UnlockedManager()
 
 	def __init__(self, *vargs, **kwargs):
 		super(Lock, self).__init__(*vargs, **kwargs)
