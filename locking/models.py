@@ -1,10 +1,7 @@
 from datetime import datetime
 
-from django.db import models
-try:
-	from account import models as auth
-except:
-	from django.contrib.auth import models as auth
+from django.db import models, IntegrityError
+from django.contrib.auth import models as auth
 from locking import LOCK_TIMEOUT, logger
 
 class ObjectLockedError(IOError):
@@ -68,8 +65,7 @@ class Lock(models.Model):
 	@property
 	def is_locked(self):
 		"""
-		A read-only property that returns True or False.
-		Works by calculating if the last lock (self.locked_at) has timed out or not.
+		Checks if lock exists and hasn't timed out
 		"""
 		if isinstance(self.locked_at, datetime):
 			if (datetime.today() - self.locked_at).seconds < LOCK_TIMEOUT:
@@ -81,14 +77,7 @@ class Lock(models.Model):
 	@property
 	def lock_seconds_remaining(self):
 		"""
-		A read-only property that returns the amount of seconds remaining before
-		any existing lock times out.
-		
-		May or may not return a negative number if the object is currently unlocked.
-		That number represents the amount of seconds since the last lock expired.
-		
-		If you want to extend a lock beyond its current expiry date, initiate a new
-		lock using the ``lock_for`` method.
+		Time left before lock is no longer enabled
 		"""
 		return LOCK_TIMEOUT - (datetime.today() - self.locked_at).seconds
 	
@@ -125,13 +114,9 @@ class Lock(models.Model):
 
 	def unlock(self):
 		"""
-		This method serves solely to allow the application itself or admin users
-		to do manual lock overrides, even if they haven't initiated these
-		locks themselves. Otherwise, use ``unlock_for``.
+		Override lock, for use by admins.
 		"""
 		self._locked_at = self._locked_by = None
-		# an administrative toggle, to make it easier for devs to extend `django-locking`
-		# and react to locking and unlocking
 		self._state.locking = True
 		logger.debug("Disengaged lock on `%s`" % self)
 	
@@ -147,11 +132,7 @@ class Lock(models.Model):
 		logger.debug("Attempting to open up a lock on `%s` by user `%s`" % (self, user))
 	
 		self.unlock()
-		# refactor: should raise exceptions instead
-		#if self.is_locked_by(user):
-		#	self.unlock()
-		#else:
-		#	raise ObjectLockedError("Trying to unlock for another user than the one who initiated the currently active lock. This is not allowed. You may want to try a manual override through the `unlock` method instead.")
+
 	
 	def lock_applies_to(self, user):
 		"""
@@ -167,23 +148,13 @@ class Lock(models.Model):
 		else:
 			logger.debug("Lock does not apply.")
 			return False
-	
-	def is_locked_by(self, user):
-		"""
-		Returns True or False. Can be used to test whether this object is locked by
-		a certain user. The ``lock_applies_to`` method and the ``is_locked`` and 
-		``locked_by`` attributes are probably more useful for most intents and
-		purposes.
-		"""
-		return user == self.locked_by
+
 	
 	def save(self, *vargs, **kwargs):
-		if self.lock_type == 'hard' and not self.__init_hard_lock:
-			raise ObjectLockedError("""There is currently a hard lock in place. You may not save.
-			If you're requesting this save in order to unlock this object for the user who
-			initiated the lock, make sure to call `unlock_for` first, with the user as
-			the argument.""")
-		self.__init_hard_lock = False
-		
-		super(Lock, self).save(*vargs, **kwargs)
+
+		try:
+			super(Lock, self).save(*vargs, **kwargs)
+		except IntegrityError:
+			raise ObjectLockedError("Duplicate lock already in place")
+			
 		self._state.locking = False

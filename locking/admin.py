@@ -2,33 +2,9 @@ from django.contrib import admin
 from django.conf import settings
 from django.utils.translation import ugettext as _
 from locking.models import Lock
+from django.contrib.auth.models import User
 
 class LockableAdmin(admin.ModelAdmin):
-#     @property
-#     class Media:
-#         # because reverse() doesn't yet work when this module is first loaded
-#         # (the urlconf still has to load at that point) the media definition
-#         # has to be dynamic, and we can't simply add a Media class to the
-#         # ModelAdmin as you usually would.
-#         #
-#         # Doing so would result in an ImproperlyConfigured exception, stating
-#         # "The included urlconf doesn't have any patterns in it."
-#         # 
-#         # See http://docs.djangoproject.com/en/dev/topics/forms/media/#media-as-a-dynamic-property
-#         # for more information about dynamic media definitions.
-#         
-#         css = {
-#             'all': ('locking/css/locking.css',)
-#             }
-#         js = (
-#             'http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js', 
-#             'locking/js/jquery.url.packed.js',
-#             #reverse('django.views.i18n.javascript_catalog'),
-#             #reverse('locking_variables'),
-#             'locking/js/admin.locking.js',
-#             )
-        
-        #return forms.Media(css=css, js=js)
     
     def changelist_view(self, request, extra_context=None):
         # we need the request objects in a few places where it's usually not present, 
@@ -68,28 +44,30 @@ class LockableAdmin(admin.ModelAdmin):
 
 def get_lock_for_admin(self_obj, obj):
 	''' 
-	returns the locking status along with a nice icon for the admin interface 
+	Returns the locking status along with a nice icon for the admin interface 
 	use in admin list display like so: list_display = ['title', 'get_lock_for_admin']
 	'''
 	
-	locked_by = ''
-	
+	locked_by = ""
+
 	try:
-		lock = Lock.objects.get(entry_id=obj.id, app=obj.__module__[0:obj.__module__.find('.')], model=obj.__class__.__name__)
-		class_name = 'locked'
-		locked_by = lock.locked_by.display_name
-	except:
-		class_name = 'unlocked'
+		lock = Lock.objects.get(entry_id=obj.id, app=obj.__module__[0:obj.__module__.find(".")], model=obj.__class__.__name__)
+		class_name = "locked"
+		locked_by = u'%s %s' % (lock.locked_by.first_name, lock.locked_by.last_name)
+		
 	
-	img_path = 	settings.ADMIN_MEDIA_PREFIX + 'blog/img/'
+	except Lock.DoesNotExist:
+		class_name = "unlocked"
+	except User.DoesNotExist:
+		locked_by = "N/A"
 	
 	output = str(obj.id)
 	
 	if self_obj.request.user.has_perm(u'blog.unlock_post'): 
 	
-		return '<a href="#" class="lock-status ' + class_name + '" title="Locked By: ' + locked_by + '" >' + output  + '</a>'
+		return u'<a href="#" class="lock-status %s" title="Locked By: %s" >%s</a>' % (class_name, locked_by, output)
 	else: 
-		return '<span class="lock-status ' + class_name + '" title="Locked By: ' + locked_by + '">' + output  + '</span>'
+		return '<span class="lock-status %s" title="Locked By: %s">%s</span>' % (class_name, locked_by, output)
 		
 get_lock_for_admin.allow_tags = True
-get_lock_for_admin.short_description = 'Lock'
+get_lock_for_admin.short_description = "Lock"

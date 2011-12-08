@@ -33,13 +33,15 @@ def lock(request, app, model, id):
 			return HttpResponse(status=403)
 
 def unlock(request, app, model, id):
-	# Users who don't have exclusive access to an object anymore may still
-	# request we unlock an object. This happens e.g. when a user navigates
-	# away from an edit screen that's been open for very long.
-	# When this happens, LockableModel.unlock_for will throw an exception, 
-	# and we just ignore the request.
-	# That way, any new lock that may since have been put in place by another 
-	# user won't get accidentally overwritten.
+	'''
+	Users who don't have exclusive access to an object anymore may still
+	request we unlock an object. This happens e.g. when a user navigates
+	away from an edit screen that's been open for very long.
+	When this happens, LockableModel.unlock_for will throw an exception, 
+	and we just ignore the request.
+	That way, any new lock that may since have been put in place by another 
+	user won't get accidentally overwritten.
+	'''
 	try:
 		obj = Lock.objects.get(entry_id=id, app=app, model=model)
 		obj.delete()
