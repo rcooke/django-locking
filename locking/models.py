@@ -2,7 +2,7 @@ from datetime import datetime
 
 from django.db import models, IntegrityError
 from django.contrib.auth import models as auth
-from locking import LOCK_TIMEOUT, logger
+from locking import LOCK_TIMEOUT
 
 class ObjectLockedError(IOError):
 	pass
@@ -33,8 +33,6 @@ class Lock(models.Model):
 		related_name="working_on_%(class)s",
 		null=True,
 		editable=False)
-		
-	_hard_lock = models.BooleanField(db_column='hard_lock', default=False, editable=False)
 	
 	# We don't want end-developers to manipulate database fields directly, 
 	# hence we're putting these behind simple getters.
@@ -94,7 +92,6 @@ class Lock(models.Model):
 		
 		Don't use hard locks unless you really need them. See :doc:`design`.
 		"""
-		logger.debug("Attempting to initiate a lock for user `%s`" % user)
 
 		if not isinstance(user, auth.User):
 			raise ValueError("You should pass a valid auth.User to lock_for.")
@@ -110,7 +107,6 @@ class Lock(models.Model):
 			# an administrative toggle, to make it easier for devs to extend `django-locking`
 			# and react to locking and unlocking
 			self._state.locking = True
-			logger.debug("Initiated a %s lock for `%s` at %s" % (self.lock_type, self.locked_by, self.locked_at))	 
 
 	def unlock(self):
 		"""
@@ -118,7 +114,6 @@ class Lock(models.Model):
 		"""
 		self._locked_at = self._locked_by = None
 		self._state.locking = True
-		logger.debug("Disengaged lock on `%s`" % self)
 	
 	def unlock_for(self, user):
 		"""
@@ -129,7 +124,6 @@ class Lock(models.Model):
 		Will raise a ObjectLockedError exception when the current user isn't authorized to
 		unlock the object.
 		"""
-		logger.debug("Attempting to open up a lock on `%s` by user `%s`" % (self, user))
 	
 		self.unlock()
 
@@ -140,13 +134,10 @@ class Lock(models.Model):
 		``lock_applies_to`` is used to ascertain whether a user is allowed
 		to edit a locked object.
 		"""
-		logger.debug("Checking if the lock on `%s` applies to user `%s`" % (self, user))
 		# a lock does not apply to the person who initiated the lock
 		if self.is_locked and self.locked_by != user:
-			logger.debug("Lock applies.")
 			return True
 		else:
-			logger.debug("Lock does not apply.")
 			return False
 
 	
