@@ -66,7 +66,7 @@ class Lock(models.Model):
 		"""
 		return LOCK_TIMEOUT - (datetime.today() - self.locked_at).seconds
 	
-	def lock_for(self, user, hard_lock=False):
+	def lock_for(self, user):
 		"""
 		Lock for a specific user
 		"""
@@ -80,7 +80,6 @@ class Lock(models.Model):
 		else:
 			self._locked_at = datetime.today()
 			self._locked_by = user
-			self._hard_lock = self.__init_hard_lock = hard_lock
 			date = self.locked_at.strftime("%H:%M:%S")
 			# an administrative toggle, to make it easier for devs to extend `django-locking`
 			# and react to locking and unlocking
