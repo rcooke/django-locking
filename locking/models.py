@@ -75,8 +75,7 @@ class Lock(models.Model):
 			raise ValueError("You should pass a valid auth.User to lock_for.")
 		
 		if self.lock_applies_to(user):
-			raise ObjectLockedError("This object is already locked by another user. \
-				May not override, except through the `unlock` method.")
+			raise ObjectLockedError("This object is already locked by another user.")
 		else:
 			self._locked_at = datetime.today()
 			self._locked_by = user
@@ -107,7 +106,7 @@ class Lock(models.Model):
 		to edit a locked object.
 		"""
 		# a lock does not apply to the person who initiated the lock
-		if self.is_locked and self.locked_by != user:
+		if self.is_locked and self.locked_by.id != user.id:
 			return True
 		else:
 			return False
