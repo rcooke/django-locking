@@ -63,7 +63,7 @@ def get_lock_for_admin(self_obj, obj):
 	
 	output = str(obj.id)
 	
-	if self_obj.request.user.has_perm(u'blog.unlock_post'): 
+	if hasattr(self_obj, "request") and self_obj.request.user.has_perm(u'blog.unlock_post'): 
 	
 		return u'<a href="#" class="lock-status %s" title="Locked By: %s" >%s</a>' % (class_name, locked_by, output)
 	else: 
