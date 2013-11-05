@@ -32,26 +32,12 @@ class LockableAdminMixin(object):
 
         return forms.Media(**{
             'js': (
-                static('locking/js/jquery.url.packed.js'),
                 reverse('admin:%s_%s_lock_js' % info, args=[pk]),
-                static("locking/js/admin.locking.js"),
             ),
-            'css': {
-                'all': (static('locking/css/locking.css'),),
-            },
         })
 
     def changelist_locking_media(self):
 
-        return forms.Media(**{
-            'js': (
-                static('locking/js/jquery.url.packed.js'),
-                static("locking/js/admin.locking.js"),
-            ),
-            'css': {
-                'all': (static('locking/css/locking.css'),),
-            },
-        })
 
     def get_urls(self):
         """
@@ -99,7 +85,16 @@ class LockableAdminMixin(object):
 
     @property
     def media(self):
-        return super(admin.ModelAdmin, self).media + self.changelist_locking_media()
+        locking_media = forms.Media(**{
+            'js': (
+                static('locking/js/jquery.url.packed.js'),
+                static("locking/js/admin.locking.js"),
+            ),
+            'css': {
+                'all': (static('locking/css/locking.css'),),
+            },
+        })
+        return super(LockableAdminMixin, self).media + locking_media
 
     def render_change_form(self, request, context, add=False, obj=None, **kwargs):
         if not add and getattr(obj, 'pk', None):
