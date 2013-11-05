@@ -1,10 +1,11 @@
 from django.db.models import Q, Manager
 from locking import settings as locking_settings
 import datetime
+from django.utils import timezone
 
 """
     LOCKED
-            if (datetime.today() - self.locked_at).seconds < LOCK_TIMEOUT:
+            if (timezone.now() - self.locked_at).seconds < LOCK_TIMEOUT:
             
             
             self.locked_at < (NOW - TIMEOUT)
@@ -12,7 +13,7 @@ import datetime
 
 def point_of_timeout():
     delta = datetime.timedelta(seconds=locking_settings.LOCK_TIMEOUT)
-    return datetime.datetime.now() - delta
+    return timezone.now() - delta
 
 class LockedManager(Manager):
     def get_query_set(self):
