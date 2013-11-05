@@ -74,13 +74,13 @@ class AppTestCase(TestCase):
     def test_lock_expiration(self):
         self.story.lock_for(self.user)
         self.assertTrue(self.story.is_locked)
-        self.story._locked_at = datetime.today() - timedelta(minutes=locking_settings.LOCK_TIMEOUT+1)
+        self.story._locked_at = timezone.today() - timedelta(minutes=locking_settings.LOCK_TIMEOUT+1)
         self.assertFalse(self.story.is_locked)
 
     def test_lock_expiration_day(self):
         self.story.lock_for(self.user)
         self.assertTrue(self.story.is_locked)
-        self.story._locked_at = datetime.today() - timedelta(days=1, seconds=1)
+        self.story._locked_at = timezone.today() - timedelta(days=1, seconds=1)
         self.assertFalse(self.story.is_locked)
 
     def test_lock_seconds_remaining(self):
