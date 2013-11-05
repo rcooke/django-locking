@@ -7,6 +7,7 @@ except ImportError:
     from django.contrib import admin
 
 from django import forms
+from django.contrib.staticfiles.templatetags.staticfiles import static
 from django.core.urlresolvers import reverse
 from django.utils import html as html_utils
 from django.utils.functional import curry
@@ -31,12 +32,24 @@ class LockableAdminMixin(object):
 
         return forms.Media(**{
             'js': (
-                locking_settings.STATIC_URL + 'locking/js/jquery.url.packed.js',
+                static('locking/js/jquery.url.packed.js'),
                 reverse('admin:%s_%s_lock_js' % info, args=[pk]),
-                locking_settings.STATIC_URL + "locking/js/admin.locking.js?v=6",
+                static("locking/js/admin.locking.js"),
             ),
             'css': {
-                'all': (locking_settings.STATIC_URL + 'locking/css/locking.css',),
+                'all': (static('locking/css/locking.css'),),
+            },
+        })
+
+    def changelist_locking_media(self):
+
+        return forms.Media(**{
+            'js': (
+                static('locking/js/jquery.url.packed.js'),
+                static("locking/js/admin.locking.js"),
+            ),
+            'css': {
+                'all': (static('locking/css/locking.css'),),
             },
         })
 
@@ -86,6 +99,10 @@ class LockableAdminMixin(object):
                 name="%s_%s_lock_status" % info))
         urlpatterns += super(LockableAdminMixin, self).get_urls()
         return urlpatterns
+
+    @property
+    def media(self):
+        return super(admin.ModelAdmin, self).media + self.changelist_locking_media()
 
     def render_change_form(self, request, context, add=False, obj=None, **kwargs):
         if not add and getattr(obj, 'pk', None):
