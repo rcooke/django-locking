@@ -8,14 +8,25 @@ Django has seen great adoption in the content management sphere, especially amon
 
 ``django-locking`` makes sure no two users can edit the same content at the same time, preventing annoying overwrites and lost time. Find the repository and download the code at http://github.com/stdbrouw/django-locking
 
-``django-locking`` has only been tested on Django 1.2 and 1.3, but probably works from 1.0 onwards.
+This version of ``django-locking`` is intended to work with Django 1.5, although it's only been tested cursorily and probably shouldn't be relied on without reading the code, then having a good sit down with a cup of tea and a hard think.
 
-Documentation
--------------
-Forked from the Django Locking plugin at stdbrouw/django-locking, this code features the cream of the crop for django-locking combining features from over 4 repos!
+Credit
+------
 
-New features added to this fork
-===============================
+This code is basically a composition of the following repos with a taste of detailed descretion from me. Credit goes out to the following authors and repos for their contributions:
+
+https://github.com/stdbrouw/django-locking
+https://github.com/runekaagaard/django-locking
+https://github.com/theatlantic/django-locking
+https://github.com/ortsed/django-locking
+
+Django 1.5 support by James Aylett:
+
+https://github.com/jaylett/django-locking
+
+Major features
+==============
+
 Changes on change list pages
 ----------------------------
     
@@ -36,6 +47,7 @@ ________________________________________________________________________________
 
 
 Consolidated username and lock icon into one column on change list page
+
 Changes in settings:
 ----------------------------
 
@@ -75,81 +87,33 @@ Refactored and cleaned up code for easier maintainability
  Simplified installation by coupling common functionality into base admin/form/model classes
 
 
-10 Minute Install
------------------
+5 Minute Install
+----------------
 
-1) Get the code:
+1) Install:
 
-    git clone git@github.com:RobCombs/django-locking.git
+    pip install git+https://github.com/jaylett/django-locking.git#egg=django-locking
 
-2) Install the django-locking python egg:
+2) Add locking to the list of INSTALLED_APPS in project settings file; you also need `django.contrib.staticfiles` (probably already there):
+
+    INSTALLED_APPS = ('locking', 'django.contrib.staticfiles')
     
-    cd django-locking
-    sudo python setup.py install
-
-3) Add locking to the list of INSTALLED_APPS in project settings file:
-
-    INSTALLED_APPS = ('locking',)
-    
-4) Add the following url mapping to your urls.py file:
-
-    urlpatterns = patterns('',
-    (r'^admin/ajax/', include('locking.urls')),
-    )
-
-5) Add locking to the admin files that you want locking for:
+3) Add locking to the admin files that you want locking for:
 
     from locking.admin import LockableAdmin
     class YourAdmin(LockableAdmin):
        list_display = ('get_lock_for_admin')
 
-6) Add warning and expiration time outs to your Django settings file:
+4) Add warning and expiration time outs to your Django settings file:
 
     LOCKING = {'time_until_expiration': 120, 'time_until_warning': 60}
 
-
-7) Build the Lock table in the database:
+5) Build the Lock table in the database:
 
     django-admin.py/manage.py migrate locking (For south users. Recommended approach) OR
     django-admin.py/manage.py syncdb (For non south users)
 
-8) Install django-locking media:
-
-    cp -r django-locking/locking/media/locking $your static media directory
-
-Note: This is the step where people usually get lost.  
-Just start up your django server and look for the 200/304s http responses when the server attempts to load the media 
-as you navigate to a model change list/view page where you've enabled django-locking. If you see 404s, you put the media in the wrong directory! 
-
-You should see something like this in the django server console:
-
-[02/May/2012 15:33:20] "GET /media/static/locking/css/locking.css HTTP/1.1" 304 0
-
-[02/May/2012 15:33:20] "GET /media/static/web/common/javascript/jquery-1.4.4.min.js HTTP/1.1" 304 0
-
-[02/May/2012 15:33:20] "GET /media/static/locking/js/jquery.url.packed.js HTTP/1.1" 304 0
-
-[02/May/2012 15:33:21] "GET /admin/ajax/variables.js HTTP/1.1" 200 114
-
-[02/May/2012 15:33:21] "GET /media/static/locking/js/admin.locking.js?v=1 HTTP/1.1" 304 0
-
-[02/May/2012 15:33:21] "GET /admin/ajax/redirects/medleyobjectredirect/14/is_locked/?_=1335987201245 HTTP/1.1" 200 0
-
-[02/May/2012 15:33:21] "GET /admin/ajax/redirects/medleyobjectredirect/14/lock/?_=1335987201295 HTTP/1.1" 200 0
-
-
-You can also hit the media directly for troubleshooting your django-locking media installation: 
-http://www.local.wsbradio.com:8000/media/static/locking/js/admin.locking.js
-If the url resolves, then you've completed this step correctly!  
-Basically, the code refers to the media like so.  That's why you needed to do this step.
-
-    class Media:
-    js = ( 'http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js', 
-         'static/locking/js/jquery.url.packed.js',
-         "/admin/ajax/variables.js",
-         "static/locking/js/admin.locking.js?v=1")
-    css = {"all": ("static/locking/css/locking.css",)
-    }
+Note that Django's built-in staticfiles cannot serve from an egg, so don't clone from a repo and try to install things that way (unless you create an sdist first). Do the above and you should be fine.
 
 That's it!
 
@@ -162,8 +126,8 @@ You'll see locks in the interface similar to the screen shots above.
 
 You can also look at your server console and you'll see the client making ajax calls to the django server checking for locks like so:
 
-    [04/May/2012 15:15:09] "GET /admin/ajax/redirects/medleyobjectredirect/14/is_locked/?_=1336158909826 HTTP/1.1" 200 0
-    [04/May/2012 15:15:09] "GET /admin/ajax/redirects/medleyobjectredirect/14/lock/?_=1336158909858 HTTP/1.1" 200 0
+    [04/May/2012 15:15:09] "GET /admin/editorial/dispatch/14/locking_variables.js HTTP/1.1" 200 488
+    [04/May/2012 15:15:09] "GET /admin/editorial/dispatch/14/lock/?_=1383670147604 HTTP/1.1" 200 200
 
 Optional
 --------
@@ -186,12 +150,3 @@ Example:
         self.cleaned_data = super(MedleyRedirectForm, self).clean()
         ...some code
         return self.cleaned_data
-
-CREDIT
-------
-This code is basically a composition of the following repos with a taste of detailed descretion from me. Credit goes out to the following authors and repos for their contributions
-and my job for funding this project:
-https://github.com/stdbrouw/django-locking
-https://github.com/runekaagaard/django-locking
-https://github.com/theatlantic/django-locking
-https://github.com/ortsed/django-locking
