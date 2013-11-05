@@ -37,16 +37,16 @@ var DJANGO_LOCKING = DJANGO_LOCKING || {};
         $.fn.bindFirst = function(name, fn) {
             // bind as you normally would
             // don't want to miss out on any jQuery magic
-            this.on(name, fn);
+            this.bind(name, fn);
 
             // Thanks to a comment by @Martin, adding support for
             // namespaced events too.
             this.each(function() {
-                var handlers = $._data(this, 'events')[name.split('.')[0]];
+                var handlers = $(this).data('events')[name.split('.')[0]];
                 // take out the handler we just inserted from the end
                 var handler = handlers.pop();
                 // move it at the beginning
-                handlers.splice(0, 0, handler);
+                handlers.unshift(handler);
             });
         };
     }
@@ -68,7 +68,7 @@ var DJANGO_LOCKING = DJANGO_LOCKING || {};
         }
 
         var self = this;
-        $(document).on('click', 'a.locking-status', function(e) {
+        $('a.locking-status').click(function(e) {
             return self.removeLockOnClick(e);
         });
         // Disable lock when you leave
@@ -88,11 +88,11 @@ var DJANGO_LOCKING = DJANGO_LOCKING || {};
                 cache: false
             });
         });
-        $(document).on('click', 'a', function(evt) {
+        $('a').click(function(evt) {
             return self.onLinkClick(evt);
         });
         $('a').bindFirst('click', function(evt) {
-            self.onLinkClick(evt);
+            return self.onLinkClick(evt);
         });
         
         this.refreshLock();
@@ -129,7 +129,7 @@ var DJANGO_LOCKING = DJANGO_LOCKING || {};
                 if (editor.status == 'ready' || editor.status == 'basic_ready') {
                     editor.setReadOnly(isReadOnly);
                 } else {
-                    editor.on('contentDom', function(e) {
+                    editor.bind('contentDom', function(e) {
                         e.editor.setReadOnly(isReadOnly);
                     });
                 }
@@ -145,7 +145,7 @@ var DJANGO_LOCKING = DJANGO_LOCKING || {};
                         }
                         break;
                     default:
-                        CKEDITOR.on("instanceReady", function(e) {
+                        CKEDITOR.bind("instanceReady", function(e) {
                             toggleEditor(e.editor);
                         });
                         break;
