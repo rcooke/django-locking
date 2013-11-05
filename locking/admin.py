@@ -64,10 +64,7 @@ class LockableAdminMixin(object):
             admin:%(app_label)s_%(object_name)s_lock_status
             admin:%(app_label)s_%(object_name)s_lock_js
         """
-        try:
-            from django.conf.urls.defaults import patterns, url
-        except ImportError:
-            from django.conf.urls import patterns, url
+        from django.conf.urls import patterns, url
 
         def wrap(view):
             curried_view = curry(view, self)
