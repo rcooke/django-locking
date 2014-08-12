@@ -203,9 +203,7 @@ class Lock(models.Model):
         """
         logger.debug("Attempting to initiate a lock for user `%s`" % user)
 
-        UserModel = get_user_model()
-
-        if not isinstance(user, UserModel):
+        if not isinstance(user, get_user_model()):
             raise ValueError("You should pass a valid auth.User to lock_for.")
 
         if self.lock_applies_to(user):
