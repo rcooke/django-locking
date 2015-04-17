@@ -162,6 +162,7 @@ var DJANGO_LOCKING = DJANGO_LOCKING || {};
             }
             this.isDisabled = false;
             $(":input:not(.django-select2, .django-ckeditor-textarea)").not('._locking_initially_disabled').removeAttr("disabled");
+            $("body").removeClass("is-locked");
 
             this.toggleCKEditorReadonly(false);
 
@@ -192,6 +193,7 @@ var DJANGO_LOCKING = DJANGO_LOCKING || {};
             }
             $(":input[disabled]").addClass('_locking_initially_disabled');
             $(":input:not(.django-select2, .django-ckeditor-textarea)").attr("disabled", "disabled");
+            $("body").addClass("is-locked");
 
             this.toggleCKEditorReadonly(true);
 
