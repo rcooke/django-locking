@@ -7,6 +7,7 @@ except ImportError:
     from django.contrib import admin
 
 from django import forms
+from django.contrib.staticfiles.templatetags.staticfiles import static
 from django.core.urlresolvers import reverse
 from django.utils import html as html_utils
 from django.utils.functional import curry
@@ -37,10 +38,10 @@ class LockableAdminMixin(object):
     def media(self):
         return super(LockableAdminMixin, self).media + forms.Media(**{
             'js': (
-                locking_settings.STATIC_URL + "locking/js/admin.locking.js?v=6",
+                static("locking/js/admin.locking.js"),
             ),
             'css': {
-                'all': (locking_settings.STATIC_URL + 'locking/css/locking.css',),
+                'all': (static('locking/css/locking.css'),),
             }})
 
     def locking_media(self, obj=None):
