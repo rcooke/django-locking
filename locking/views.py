@@ -92,16 +92,16 @@ def render_lock_status(request, lock=None, status=200):
             locked_by_name = lock.locked_by.get_full_name()
             if locked_by_name:
                 locked_by_name = u"%(username)s (%(fullname)s)" % {
-                    'username': lock.locked_by.username,
+                    'username': lock.locked_by.get_username(),
                     'fullname': locked_by_name,
                 }
             else:
-                locked_by_name = lock.locked_by.username
+                locked_by_name = lock.locked_by.get_username()
         data.update({
             'lock_pk': lock.pk,
-            'current_user': getattr(request.user, 'username', None),
+            'current_user': request.user.get_username(),
             'is_active': lock.is_locked,
-            'locked_by': getattr(lock.locked_by, 'username', None),
+            'locked_by': lock.locked_by and lock.locked_by.get_username() or None,
             'locked_by_name': locked_by_name,
             'applies': lock.lock_applies_to(request.user),
         })

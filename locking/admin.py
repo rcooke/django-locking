@@ -171,11 +171,11 @@ class LockableAdminMixin(object):
         locked_by_name = lock.locked_by.get_full_name()
         if locked_by_name:
             locked_by_name = u"%(username)s (%(fullname)s)" % {
-                'username': lock.locked_by.username,
+                'username': lock.locked_by.get_username(),
                 'fullname': locked_by_name,
             }
         else:
-            locked_by_name = lock.locked_by.username
+            locked_by_name = lock.locked_by.get_username()
 
         if lock.locked_by.pk == current_user_id:
             msg = _(u"You own this lock for %s longer") %  until
