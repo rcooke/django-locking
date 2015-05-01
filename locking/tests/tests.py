@@ -10,5 +10,5 @@ class ExpirationTestCase(TestCase):
     def test_lock_seconds_remaining(self):
         lock = LockFactory(_locked_at=timezone.now())
         actual = lock.lock_seconds_remaining
-        expected = 120 # must match default in locking.settings
+        expected = 120 # as set in runtests.py
         self.assertAlmostEqual(expected, actual, delta=1)
