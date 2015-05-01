@@ -1,6 +1,6 @@
 import factory
 
-from . import models
+from .. import models
 
 class LockFactory(factory.Factory):
     class Meta:
