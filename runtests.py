@@ -1,6 +1,8 @@
 import os.path
 import subprocess
 import sys
+
+import django
 from django.conf import settings
 
 settings.configure(
@@ -22,6 +24,9 @@ settings.configure(
         },
     },
 )
+
+if hasattr(django, 'setup'):
+    django.setup()
 
 from django.test.runner import DiscoverRunner
 test_runner = DiscoverRunner(verbosity=1, failfast=False)
