@@ -8,7 +8,7 @@ Django has seen great adoption in the content management sphere, especially amon
 
 ``django-locking`` makes sure no two users can edit the same content at the same time, preventing annoying overwrites and lost time. Find the repository and download the code at http://github.com/stdbrouw/django-locking
 
-This version of ``django-locking`` is intended to work with Django 1.5-1.6, although it's only been tested cursorily and probably shouldn't be relied on without reading the code, then having a good sit down with a cup of tea and a hard think.
+This version of ``django-locking`` is intended to work with Django 1.6-1.7, although it's only been tested cursorily and probably shouldn't be relied on without reading the code, then having a good sit down with a cup of tea and a hard think.
 
 Credit
 ------
