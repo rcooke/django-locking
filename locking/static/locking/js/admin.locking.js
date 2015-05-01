@@ -321,7 +321,7 @@ var DJANGO_LOCKING = DJANGO_LOCKING || {};
     };
 
     $(document).ready(function() {
-        var $target = $("#content-inner, #content").eq(0);
+        var $target = $("#content-inner, #content, #grp-content").eq(0);
         var $notificationElement = $('<div id="locking_notification"></div>').prependTo($target);
         $notificationElement.djangoLocking();
     });
