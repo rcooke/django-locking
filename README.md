@@ -146,3 +146,25 @@ Example:
         self.cleaned_data = super(MedleyRedirectForm, self).clean()
         ...some code
         return self.cleaned_data
+
+Migration dependencies under South
+----------------------------------
+
+In order for tests to work you need to ensure that the migration which
+creates the ``Lock`` model runs after your user model is created. This
+should generally work if you put the ``locking`` app after whatever
+app provides the user model (``auth.user`` or your own app if you're
+using a custom user model), but if you don't want to do that or it
+doesn't work you'll want to add a reverse dependency from the
+migration in your app that creates the user model.
+
+For South v1.0 you want to do the following:
+
+    class Migration(SchemaMigration):
+
+        needed_by = (
+            ("locking", "0001_initial"),
+        )
+
+Django 1.7's migrations system takes care of this for you
+automatically.
