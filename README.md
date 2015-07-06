@@ -88,7 +88,7 @@ Refactored and cleaned up code for easier maintainability
 
 1) Install:
 
-    pip install git+https://github.com/jaylett/django-locking.git#egg=django-locking
+    pip install git+https://github.com/rcooke/django-locking.git#egg=django-locking
 
 2) Add locking to the list of INSTALLED_APPS in project settings file; you also need `django.contrib.staticfiles` (probably already there):
 
