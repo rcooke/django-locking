@@ -6,6 +6,7 @@ try:
 except ImportError:
     from django.contrib import admin
 
+import django
 from django import forms
 from django.core.urlresolvers import reverse
 from django.utils import html as html_utils
@@ -45,7 +46,7 @@ class LockableAdminMixin(object):
 
     def locking_media(self, obj=None):
         opts = self.model._meta
-        info = (opts.app_label, opts.module_name)
+        info = (opts.app_label, getattr(opts, 'model_name', None) or getattr(opts, 'module_name', None))
         pk = getattr(obj, 'pk', None) or 0
         return forms.Media(js=(
             reverse('admin:%s_%s_lock_js' % info, args=[pk]),))
@@ -76,7 +77,7 @@ class LockableAdminMixin(object):
             return functools.update_wrapper(wrapper, view)
 
         opts = self.model._meta
-        info = (opts.app_label, opts.module_name)
+        info = (opts.app_label, getattr(opts, 'model_name', None) or getattr(opts, 'module_name', None))
 
         urlpatterns = patterns('',
             url(r'^(.+)/locking_variables\.js$',
@@ -140,17 +141,23 @@ class LockableAdminMixin(object):
                     lock.unlock_for(request.user)
         super(LockableAdminMixin, self).save_model(request, obj, *args, **kwargs)
 
-    def queryset(self, request):
+    def get_queryset(self, request):
         """
         Extended queryset method which adds a custom SQL select column,
         `_locking_user_pk`, which is set to the pk of the current request's
         user instance. Doing this allows us to access the user id by
         obj._locking_user_pk for any object returned from this queryset.
         """
-        qs = super(LockableAdminMixin, self).queryset(request)
+        if django.VERSION < (1, 7):
+            qs = super(LockableAdminMixin, self).queryset(request)
+        else:
+            qs = super(LockableAdminMixin, self).get_queryset(request)
         return qs.extra(select={
             '_locking_user_pk': "%d" % request.user.pk,
         })
+
+    if django.VERSION < (1, 7):
+        queryset = get_queryset
 
     def get_lock_for_admin(self, obj):
         """
