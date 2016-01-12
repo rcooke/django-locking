@@ -213,7 +213,7 @@ var DJANGO_LOCKING = DJANGO_LOCKING || {};
             has_expired: 'You have lost your lock on this page. If you save, ' +
                          'your attempts may be thwarted due to another lock ' +
                          ' or you may have stale data.',
-            prompt_save: 'Do you wish to save the page?',
+            prompt_save: 'Do you wish to save the page?'
         },
         lockOwner: null,
         currentUser: null,
