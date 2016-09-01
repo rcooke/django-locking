@@ -181,7 +181,7 @@ class LockableAdminMixin(object):
             msg = _(u"You own this lock for %s longer") %  until
             css_class = 'locking-edit'
         else:
-            msg = _(u"Locked by %s for %s longer") % (until, locked_by_name)
+            msg = _(u"Locked by %s for %s longer") % (locked_by_name, until)
             css_class = 'locking-locked'
 
         return (
