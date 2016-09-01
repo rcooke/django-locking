@@ -135,7 +135,7 @@ def locking_js(model_admin, request, object_id, extra_context=None):
         locking_urls.update({
             "lock": reverse("admin:%s_%s_lock" % info, args=[object_id]),
             "lock_clear":  reverse("admin:%s_%s_lock_clear" % info, args=[object_id]),
-            "lock_status": reverse("admin:%s_%s_lock_status" % info, args=[object_id]),        
+            "lock_status": reverse("admin:%s_%s_lock_status" % info, args=[object_id]),
         })
 
     js_vars = {
