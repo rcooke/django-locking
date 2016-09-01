@@ -205,3 +205,9 @@ class LockableAdminMixin(object):
 
 class LockableAdmin(LockableAdminMixin, admin.ModelAdmin):
     pass
+
+# Temporary for Diagnostics: (RCooke)
+from .models import Lock
+
+admin.site.register(Lock)
+

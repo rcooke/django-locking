@@ -286,3 +286,11 @@ class Lock(models.Model):
     def save(self, *vargs, **kwargs):
         super(Lock, self).save(*vargs, **kwargs)
         self._state.locking = False
+
+    # For debug logging and other diagnostics
+    def __unicode__(self):
+        try:
+            return "User %s for record '%s', pk=%s, status:%s type: %s, time left: %s"% (self.locked_by, self.content_type, self.object_id, self.is_locked, self.lock_type, self.lock_seconds_remaining)
+        except:
+            return "Lock object"
+
