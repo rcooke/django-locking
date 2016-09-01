@@ -6,6 +6,7 @@ try:
 except ImportError:
     from django.contrib import admin
 
+import django
 from django import forms
 from django.contrib.staticfiles.templatetags.staticfiles import static
 from django.core.urlresolvers import reverse
@@ -46,9 +47,10 @@ class LockableAdminMixin(object):
 
     def locking_media(self, obj=None):
         opts = self.model._meta
-# https://code.djangoproject.com/ticket/20853
+        # https://code.djangoproject.com/ticket/20853
 #        info = (opts.app_label, opts.module_name)
-        info = (opts.app_label, opts.model_name)
+#        info = (opts.app_label, opts.model_name)
+        info = (opts.app_label, getattr(opts, 'model_name', None) or getattr(opts, 'module_name', None))
         pk = getattr(obj, 'pk', None) or 0
         return forms.Media(js=(
             reverse('admin:%s_%s_lock_js' % info, args=[pk]),))
@@ -67,7 +69,10 @@ class LockableAdminMixin(object):
             admin:%(app_label)s_%(object_name)s_lock_status
             admin:%(app_label)s_%(object_name)s_lock_js
         """
-        from django.conf.urls import patterns, url
+        try:
+            from django.conf.urls import url
+        except ImportError:
+            from django.conf.urls.defaults import url
 
         def wrap(view):
             curried_view = curry(view, self)
@@ -76,11 +81,12 @@ class LockableAdminMixin(object):
             return functools.update_wrapper(wrapper, view)
 
         opts = self.model._meta
-# https://code.djangoproject.com/ticket/20853
+        # https://code.djangoproject.com/ticket/20853
 #        info = (opts.app_label, opts.module_name)
-        info = (opts.app_label, opts.model_name)
+#        info = (opts.app_label, opts.model_name)
+        info = (opts.app_label, getattr(opts, 'model_name', None) or getattr(opts, 'module_name', None))
 
-        urlpatterns = patterns('',
+        return [
             url(r'^(.+)/locking_variables\.js$',
                 wrap(locking_views.locking_js),
                 name="%s_%s_lock_js" % info),
@@ -95,9 +101,8 @@ class LockableAdminMixin(object):
                 name="%s_%s_lock_remove" % info),
             url(r'^(.+)/lock_status/$',
                 wrap(locking_views.lock_status),
-                name="%s_%s_lock_status" % info))
-        urlpatterns += super(LockableAdminMixin, self).get_urls()
-        return urlpatterns
+                name="%s_%s_lock_status" % info),
+        ] + super(LockableAdminMixin, self).get_urls()
 
     @csrf_protect_m
     def changelist_view(self, request, extra_context=None):
@@ -149,10 +154,16 @@ class LockableAdminMixin(object):
         user instance. Doing this allows us to access the user id by
         obj._locking_user_pk for any object returned from this queryset.
         """
-        qs = super(LockableAdminMixin, self).get_queryset(request)
+        if django.VERSION < (1, 7):
+            qs = super(LockableAdminMixin, self).queryset(request)
+        else:
+            qs = super(LockableAdminMixin, self).get_queryset(request)
         return qs.extra(select={
             '_locking_user_pk': "%d" % request.user.pk,
         })
+
+    if django.VERSION < (1, 7):
+        queryset = get_queryset
 
     def get_lock_for_admin(self, obj):
         """

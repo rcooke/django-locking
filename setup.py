@@ -2,7 +2,7 @@ import os
 from setuptools import setup, find_packages
 
 setup(name='django-locking',
-      version='2.2.13',
+      version='2.2.19',
       description=("Prevents users from doing concurrent editing in Django. Works out of the box in the admin interface, or you can integrate it with your own apps using a public API."),
       classifiers=['Development Status :: 4 - Beta',
                    'Environment :: Web Environment',
@@ -20,11 +20,5 @@ setup(name='django-locking',
       download_url='http://www.github.com/RobCombs/django-locking/tarball/master',
       license='BSD',
       packages=find_packages(),
-      package_data={
-          'locking': [
-              'static/locking/css/*',
-              'static/locking/js/*',
-              'static/locking/img/*',
-          ],
-      },
-      )
+      install_requires=['django-staticfiles'],
+      include_package_data=True)

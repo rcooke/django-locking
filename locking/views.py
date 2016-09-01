@@ -134,9 +134,10 @@ def lock_status(model_admin, request, object_id, extra_context=None, **kwargs):
 
 def locking_js(model_admin, request, object_id, extra_context=None):
     opts = model_admin.model._meta
-# https://code.djangoproject.com/ticket/20853
-#        info = (opts.app_label, opts.module_name)
-    info = (opts.app_label, opts.model_name)
+    # https://code.djangoproject.com/ticket/20853
+#    info = (opts.app_label, opts.module_name)
+#    info = (opts.app_label, opts.model_name)
+    info = (opts.app_label, opts.object_name.lower())
 
     locking_urls = {
         "lock_remove": reverse("admin:%s_%s_lock_remove" % info, args=[object_id]),
