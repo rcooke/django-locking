@@ -23,16 +23,26 @@ json_encode = json.JSONEncoder(indent=4).encode
 
 
 def lock(model_admin, request, object_id, extra_context=None):
+    logger.debug("In LOCK View!")
+    logger.debug("\ndir(request): " + repr(dir(request)) + '\n' )
+    logger.debug("\nrequest.is_ajax(): " + repr(request.is_ajax()) + '\n' )
+    logger.debug("\nrequest.GET: " + repr(dir(request.GET)) + '\n' )
+    logger.debug("\nrepr(request.GET): " + repr(request.GET) + '\n' )
     existing_lock_pk = request.GET.get('lock_pk')
     ct = ContentType.objects.get_for_model(model_admin.model)
+    logger.debug("Existing lock: " + str(existing_lock_pk) + " ct: " + str(ct) )
     try:
         lock = Lock.objects.get(content_type=ct, object_id=object_id)
+        logger.debug("\nlock: " + repr(lock) +'\n' )
     except Lock.DoesNotExist:
+        logger.debug("Lock does not exist!")
         try:
             ct.get_object_for_this_type(pk=object_id)
         except ObjectDoesNotExist:
+            logger.debug("  Unable to get content type for lock object, giving up!")
             lock = None
         else:
+            logger.debug("existing_lock_pk: " + str(existing_lock_pk) )
             if not existing_lock_pk:
                 lock = Lock(content_type=ct, object_id=object_id)
 
@@ -47,6 +57,7 @@ def lock(model_admin, request, object_id, extra_context=None):
         except ObjectLockedError:
             status = 423 # HTTP 423 = 'Locked'
         else:
+            logger.debug("\nSaving Lock record: " + repr(lock) )
             status = 200
             lock.save()
     return render_lock_status(request, lock=lock, status=status)
