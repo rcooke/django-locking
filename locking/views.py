@@ -15,6 +15,10 @@ from .models import Lock, ObjectLockedError
 from . import settings as locking_settings
 
 
+import logging
+logger = logging.getLogger('project.locking_view')
+
+
 json_encode = json.JSONEncoder(indent=4).encode
 
 

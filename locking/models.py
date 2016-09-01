@@ -18,7 +18,7 @@ from . import managers, settings as locking_settings
 from .utils import timedelta_to_seconds
 
 
-logger = logging.getLogger('django.locker')
+logger = logging.getLogger('project.lock_model')
 
 
 class ObjectLockedError(IOError):
