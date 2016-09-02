@@ -1,8 +1,8 @@
 import django
 from django.db.models import Q, Manager
+from django.utils import timezone
 from locking import settings as locking_settings
 import datetime
-from django.utils import timezone
 
 """
     LOCKED
