@@ -172,7 +172,7 @@ class LockableAdminMixin(object):
         interface use in admin list display like so:
         list_display = ['title', 'get_lock_for_admin']
         """
-        current_user_id = self._locking_user_pk
+        current_user_id = obj._locking_user_pk
 
         try:
             lock = Lock.objects.get_lock_for_object(obj)
