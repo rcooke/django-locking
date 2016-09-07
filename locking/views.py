@@ -87,10 +87,12 @@ def _unlock(model_admin, request, object_id, extra_context=None, filter_user=Fal
 def lock_remove(model_admin, request, object_id, extra_context=None):
     """Remove any lock on object_id"""
     # XXX this is quite dependent on Loop
-    if request.user.is_editor():
-        return _unlock(model_admin, request, object_id, extra_context=extra_context)
+    # Note: You must assign this permission to users or groups before they
+    # can un-lock records! 
+    if request.user.has_perm('locking.unlocker'):
+      return _unlock(model_admin, request, object_id, extra_context=extra_context)
     else:
-        return HttpResponse(status=403)
+      return HttpResponse(status=403)
 
 
 

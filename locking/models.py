@@ -109,6 +109,9 @@ class Lock(models.Model):
 
     class Meta:
         ordering = ('-_locked_at',)
+        permissions = (
+          ("unlocker", "Can break record locks."),
+        )
 
     # We don't want end-developers to manipulate database fields directly,
     # hence we're putting these behind simple getters.
