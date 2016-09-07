@@ -221,5 +221,22 @@ class LockableAdmin(LockableAdminMixin, admin.ModelAdmin):
 # Temporary for Diagnostics: (RCooke)
 from .models import Lock
 
-admin.site.register(Lock)
+class LockAdmin(admin.ModelAdmin):
+  fields = (
+    'content_type',
+    'object_id',
+    '_locked_at',
+    '_locked_by',
+    '_hard_lock',
+    'lock_seconds_remaining',
+    )
+  readonly_fields = (
+    '_locked_at',
+    '_locked_by',
+    '_hard_lock',
+    'lock_seconds_remaining',
+    )
+
+
+admin.site.register(Lock, LockAdmin)
 
