@@ -200,18 +200,18 @@ class LockableAdminMixin(object):
             msg = _("Locked by %s for %s longer") % (locked_by_name, until)
             css_class = 'locking-locked'
 
-        return (
-            '  <a href="#" title="%(msg)s"'
-            '     data-locked-obj-id="%(locked_obj_id)s"'
-            '     data-locked-by="%(locked_by_name)s"'
-            '     class="locking-status %(css_class)s"></a>'
-        ) % {
-            'msg': html_utils.escape(msg),
-            'locked_obj_id': obj.pk,
-            'locked_by_name': html_utils.escape(locked_by_name),
-            'css_class': css_class,}
+        return html_utils.format_html(
+            '  <a href="#" title="{}"'
+            '     data-locked-obj-id="{}"'
+            '     data-locked-by="{}"'
+            '     class="locking-status {}"></a>',
+            html_utils.escape(msg),
+            obj.pk,
+            html_utils.escape(locked_by_name),
+            css_class,
+            )
 
-    get_lock_for_admin.allow_tags = True
+#    get_lock_for_admin.allow_tags = True
     get_lock_for_admin.short_description = 'Lock'
 
 
