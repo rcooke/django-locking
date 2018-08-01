@@ -22,8 +22,9 @@ from . import managers, settings as locking_settings
 from .utils import timedelta_to_seconds
 
 
-logger = logging.getLogger('project.lock_model')
-
+#logger = logging.getLogger('project.lock_model')
+logger = logging.getLogger('django.locker')
+#logger.setLevel(logging.NOTSET)
 
 class ObjectLockedError(IOError):
     pass
@@ -41,9 +42,9 @@ class LockingManager(models.Manager):
                     'actual_type': type(obj).__name__,})
         if not getattr(obj._meta, 'pk', None):
             raise Exception((
-                u"Cannot get lock for instance %(instance)s; model "
-                u"%(app_label)s.%(object_name)s has no primary key field") % {
-                    'instance': unicode(obj),
+                "Cannot get lock for instance %(instance)s; model "
+                "%(app_label)s.%(object_name)s has no primary key field") % {
+                    'instance': str(obj),
                     'app_label': obj._meta.app_label,
                     'object_name': obj._meta.object_name,})
 
@@ -89,7 +90,7 @@ class Lock(models.Model):
 
     unlocked = managers.UnlockedManager()
 
-    content_type = models.ForeignKey(ContentType)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
 
     content_object = GenericForeignKey('content_type', 'object_id')
@@ -99,6 +100,7 @@ class Lock(models.Model):
         editable=False)
 
     _locked_by = models.ForeignKey(settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
         db_column='locked_by',
         related_name="working_on_%(app_label)s_%(class)s",
         null=True,

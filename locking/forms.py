@@ -59,9 +59,9 @@ def locking_form_factory(model, form=ModelForm, request=None, *args, **kwargs):
 
             try:
                 raise forms.ValidationError((
-                    u"You cannot save this %(verbose_name)s because it is "
-                    u"locked by %(user)s. The lock will expire in "
-                    u"%(time_remaining)s if that user is idle.") % {
+                    "You cannot save this %(verbose_name)s because it is "
+                    "locked by %(user)s. The lock will expire in "
+                    "%(time_remaining)s if that user is idle.") % {
                         'verbose_name': self._meta.model._meta.verbose_name,
                         'user': lock.locked_by.get_full_name(),
                         'time_remaining': timeuntil(lock.lock_expiration_time),

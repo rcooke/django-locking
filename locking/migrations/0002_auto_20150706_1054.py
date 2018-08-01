@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.db import models, migrations
 from django.conf import settings
@@ -15,6 +15,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='lock',
             name='_locked_by',
-            field=models.ForeignKey(related_name='working_on_locking_lock', db_column=b'locked_by', editable=False, to=settings.AUTH_USER_MODEL, null=True),
+            field=models.ForeignKey(related_name='working_on_locking_lock', on_delete=models.CASCADE, db_column='locked_by', editable=False, to=settings.AUTH_USER_MODEL, null=True),
         ),
     ]

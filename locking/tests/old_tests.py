@@ -27,14 +27,14 @@ class AppTestCase(TestCase):
         # you can save a hard lock once (to initiate the lock)
         # but after that saving without first unlocking raises an error
         self.story.lock_for(self.user, hard_lock=True)
-        self.assertEquals(self.story.lock_type, "hard")
+        self.assertEqual(self.story.lock_type, "hard")
         self.story.save()
         self.assertRaises(models.ObjectLockedError, self.story.save)
     
     def test_soft_lock(self):
         self.story.lock_for(self.user)
         self.story.save()
-        self.assertEquals(self.story.lock_type, "soft")
+        self.assertEqual(self.story.lock_type, "soft")
         self.story.save() 
     
     def test_lock_for(self):
@@ -122,7 +122,7 @@ class AppTestCase(TestCase):
     
     def test_is_locked_by(self):
         self.story.lock_for(self.user)
-        self.assertEquals(self.story.locked_by, self.user)
+        self.assertEqual(self.story.locked_by, self.user)
     
     def test_is_unlocked(self):
         # this might seem like a silly test, but an object
@@ -134,49 +134,49 @@ class AppTestCase(TestCase):
         # bit so other developers can know a save will do a lock or 
         # unlock and respond to that information if they so wish.
         self.story.content = "Blah"
-        self.assertEquals(self.story._state.locking, False)
+        self.assertEqual(self.story._state.locking, False)
         self.story.lock_for(self.user)
-        self.assertEquals(self.story._state.locking, True)
+        self.assertEqual(self.story._state.locking, True)
         self.story.save()
-        self.assertEquals(self.story._state.locking, False)        
+        self.assertEqual(self.story._state.locking, False)        
 
     def test_locking_bit_when_unlocking(self):
         # when we've locked something, we should set an administrative
         # bit so other developers can know a save will do a lock or 
         # unlock and respond to that information if they so wish.
         self.story.content = "Blah"
-        self.assertEquals(self.story._state.locking, False)
+        self.assertEqual(self.story._state.locking, False)
         self.story.lock_for(self.user)
         self.story.unlock_for(self.user)
-        self.assertEquals(self.story._state.locking, True)        
+        self.assertEqual(self.story._state.locking, True)        
         self.story.save()
-        self.assertEquals(self.story._state.locking, False)  
+        self.assertEqual(self.story._state.locking, False)  
 
     def test_unlocked_manager(self):
         self.story.lock_for(self.user)
         self.story.save()
-        self.assertEquals(testmodels.Story.objects.count(), 2)
-        self.assertEquals(testmodels.Story.unlocked.count(), 1)
-        self.assertEquals(testmodels.Story.unlocked.get(pk=self.alt_story.pk).pk, 1)
+        self.assertEqual(testmodels.Story.objects.count(), 2)
+        self.assertEqual(testmodels.Story.unlocked.count(), 1)
+        self.assertEqual(testmodels.Story.unlocked.get(pk=self.alt_story.pk).pk, 1)
         self.assertRaises(testmodels.Story.DoesNotExist, testmodels.Story.unlocked.get, pk=self.story.pk)
-        self.assertNotEquals(testmodels.Story.unlocked.all()[0].pk, self.story.pk)
+        self.assertNotEqual(testmodels.Story.unlocked.all()[0].pk, self.story.pk)
 
     def test_locked_manager(self):
         self.story.lock_for(self.user)
         self.story.save()
-        self.assertEquals(testmodels.Story.objects.count(), 2)
-        self.assertEquals(testmodels.Story.locked.count(), 1)
-        self.assertEquals(testmodels.Story.locked.get(pk=self.story.pk).pk, 2)
+        self.assertEqual(testmodels.Story.objects.count(), 2)
+        self.assertEqual(testmodels.Story.locked.count(), 1)
+        self.assertEqual(testmodels.Story.locked.get(pk=self.story.pk).pk, 2)
         self.assertRaises(testmodels.Story.DoesNotExist, testmodels.Story.locked.get, pk=self.alt_story.pk)
-        self.assertEquals(testmodels.Story.locked.all()[0].pk, self.story.pk)
+        self.assertEqual(testmodels.Story.locked.all()[0].pk, self.story.pk)
 
     def test_managers(self):
         self.story.lock_for(self.user)
         self.story.save()
         locked = testmodels.Story.locked.all()
         unlocked = testmodels.Story.unlocked.all()
-        self.assertEquals(locked.count(), 1)
-        self.assertEquals(unlocked.count(), 1)
+        self.assertEqual(locked.count(), 1)
+        self.assertEqual(unlocked.count(), 1)
         self.assertTrue(len(set(locked).intersection(set(unlocked))) == 0)
 
 
@@ -231,7 +231,7 @@ class BrowserTestCase(TestCase):
       
     def test_lock_when_allowed(self):
         res = self.c.get(self.urls['lock'])        
-        self.assertEquals(res.status_code, 200)
+        self.assertEqual(res.status_code, 200)
         # reload our test story
         story = testmodels.Story.objects.get(pk=self.story.id)
         self.assertTrue(story.is_locked)
@@ -239,7 +239,7 @@ class BrowserTestCase(TestCase):
     def test_lock_when_logged_out(self):
         self.c.logout()
         res = self.c.get(self.urls['lock'])
-        self.assertEquals(res.status_code, 401)
+        self.assertEqual(res.status_code, 401)
     
     def test_lock_when_unauthorized(self):
         # when a user doesn't have permission to change the model
@@ -247,7 +247,7 @@ class BrowserTestCase(TestCase):
         self.c.logout()
         self.c.login(**users[1])
         res = self.c.get(self.urls['lock'])        
-        self.assertEquals(res.status_code, 401)
+        self.assertEqual(res.status_code, 401)
     
     def test_lock_when_does_not_apply(self):
         # don't make a resource available to lock models that don't 
@@ -256,19 +256,19 @@ class BrowserTestCase(TestCase):
         args = [obj._meta.app_label, obj._meta.module_name, obj.pk]
         url = reverse(views.lock, args=args)
         res = self.c.get(url)        
-        self.assertEquals(res.status_code, 404)              
+        self.assertEqual(res.status_code, 404)              
     
     def test_lock_when_disallowed(self):
         self.story.lock_for(self.alt_user)
         self.story.save()
         res = self.c.get(self.urls['lock'])        
-        self.assertEquals(res.status_code, 403)
+        self.assertEqual(res.status_code, 403)
     
     def test_unlock_when_allowed(self):
         self.story.lock_for(self.user)
         self.story.save()
         res = self.c.get(self.urls['unlock'])        
-        self.assertEquals(res.status_code, 200)
+        self.assertEqual(res.status_code, 200)
         # reload our test story
         story = testmodels.Story.objects.get(pk=self.story.id)
         self.assertFalse(story.is_locked)
@@ -277,7 +277,7 @@ class BrowserTestCase(TestCase):
         self.story.lock_for(self.alt_user)
         self.story.save()
         res = self.c.get(self.urls['unlock'])        
-        self.assertEquals(res.status_code, 403)
+        self.assertEqual(res.status_code, 403)
 
     def test_is_locked_when_applies(self):
         self.story.lock_for(self.alt_user)
@@ -297,7 +297,7 @@ class BrowserTestCase(TestCase):
 
     def test_js_variables(self):
         res = self.c.get(self.urls['js_variables'])
-        self.assertEquals(res.status_code, 200)
+        self.assertEqual(res.status_code, 200)
         self.assertContains(res, locking_settings.LOCK_TIMEOUT)
     
     def test_admin_media(self):

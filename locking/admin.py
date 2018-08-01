@@ -9,7 +9,7 @@ except ImportError:
 import django
 from django import forms
 from django.contrib.staticfiles.templatetags.staticfiles import static
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.utils import html as html_utils
 from django.utils.functional import curry
 from django.utils.timesince import timeuntil
@@ -122,8 +122,8 @@ class LockableAdminMixin(object):
     def render_change_form(self, request, context, add=False, change=False, form_url='', obj=None):
         if not add and getattr(obj, 'pk', None):
             locking_media = self.locking_media(obj)
-            if isinstance(context['media'], basestring):
-                locking_media = unicode(locking_media)
+            if isinstance(context['media'], str):
+                locking_media = str(locking_media)
             context['media'] += locking_media
         return super(LockableAdminMixin, self).render_change_form(
                 request, context, add=add, change=change, form_url=form_url, obj=obj
@@ -177,16 +177,16 @@ class LockableAdminMixin(object):
         try:
             lock = Lock.objects.get_lock_for_object(obj)
         except Lock.DoesNotExist:
-            return u""
+            return ""
         else:
             if not lock.is_locked:
-                return u""
+                return ""
 
         until = timeuntil(lock.lock_expiration_time)
 
         locked_by_name = lock.locked_by.get_full_name()
         if locked_by_name:
-            locked_by_name = u"%(username)s (%(fullname)s)" % {
+            locked_by_name = "%(username)s (%(fullname)s)" % {
                 'username': lock.locked_by.get_username(),
                 'fullname': locked_by_name,
             }
@@ -194,17 +194,17 @@ class LockableAdminMixin(object):
             locked_by_name = lock.locked_by.get_username()
 
         if lock.locked_by.pk == current_user_id:
-            msg = _(u"You own this lock for %s longer") %  until
+            msg = _("You own this lock for %s longer") %  until
             css_class = 'locking-edit'
         else:
-            msg = _(u"Locked by %s for %s longer") % (locked_by_name, until)
+            msg = _("Locked by %s for %s longer") % (locked_by_name, until)
             css_class = 'locking-locked'
 
         return (
-            u'  <a href="#" title="%(msg)s"'
-            u'     data-locked-obj-id="%(locked_obj_id)s"'
-            u'     data-locked-by="%(locked_by_name)s"'
-            u'     class="locking-status %(css_class)s"></a>'
+            '  <a href="#" title="%(msg)s"'
+            '     data-locked-obj-id="%(locked_obj_id)s"'
+            '     data-locked-by="%(locked_by_name)s"'
+            '     class="locking-status %(css_class)s"></a>'
         ) % {
             'msg': html_utils.escape(msg),
             'locked_obj_id': obj.pk,
