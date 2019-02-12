@@ -1,81 +1,242 @@
-# encoding: utf-8
+import functools
+import json
 
-from datetime import datetime
+try:
+    from custom_admin import admin
+except ImportError:
+    from django.contrib import admin
 
-from django.contrib import admin
-from django.conf import settings
-from django.core.urlresolvers import reverse
-from django.utils.translation import ugettext as _
+import django
 from django import forms
-from django.contrib.contenttypes.models import ContentType
+from django.contrib.staticfiles.templatetags.staticfiles import static
+from django.urls import reverse
+from django.utils import html as html_utils
+from django.utils.functional import curry
+from django.utils.timesince import timeuntil
+from django.utils.translation import ugettext as _
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_protect
 
-from locking import LOCK_TIMEOUT, views
-from locking.models import Lock
+try:
+    from django.template.response import TemplateResponse
+except ImportError:
+    # django <= 1.2, not fully supported
+    class TemplateResponse(object): pass
 
-class LockableAdmin(admin.ModelAdmin):
-   
+from .models import Lock
+from .forms import locking_form_factory
+from . import settings as locking_settings, views as locking_views
+
+
+json_encode = json.JSONEncoder(indent=4).encode
+
+csrf_protect_m = method_decorator(csrf_protect)
+
+
+class LockableAdminMixin(object):
+
+    @property
+    def media(self):
+        return super(LockableAdminMixin, self).media + forms.Media(**{
+            'js': (
+                static("locking/js/admin.locking.js"),
+            ),
+            'css': {
+                'all': (static('locking/css/locking.css'),),
+            }})
+
+    def locking_media(self, obj=None):
+        opts = self.model._meta
+        # https://code.djangoproject.com/ticket/20853
+#        info = (opts.app_label, opts.module_name)
+#        info = (opts.app_label, opts.model_name)
+        info = (opts.app_label, getattr(opts, 'model_name', None) or getattr(opts, 'module_name', None))
+        pk = getattr(obj, 'pk', None) or 0
+        return forms.Media(js=(
+            reverse('admin:%s_%s_lock_js' % info, args=[pk]),))
+
+    def get_urls(self):
+        """
+        Appends locking urls to the ModelAdmin's own urls. Its url names
+        are patterned after the urls for the ModelAdmin's views (e.g.
+        changelist_view, change_view).
+
+        The url names appended are:
+
+            admin:%(app_label)s_%(object_name)s_lock
+            admin:%(app_label)s_%(object_name)s_lock_clear
+            admin:%(app_label)s_%(object_name)s_lock_remove
+            admin:%(app_label)s_%(object_name)s_lock_status
+            admin:%(app_label)s_%(object_name)s_lock_js
+        """
+        try:
+            from django.conf.urls import url
+        except ImportError:
+            from django.conf.urls.defaults import url
+
+        def wrap(view):
+            curried_view = curry(view, self)
+            def wrapper(*args, **kwargs):
+                return self.admin_site.admin_view(curried_view)(*args, **kwargs)
+            return functools.update_wrapper(wrapper, view)
+
+        opts = self.model._meta
+        # https://code.djangoproject.com/ticket/20853
+#        info = (opts.app_label, opts.module_name)
+#        info = (opts.app_label, opts.model_name)
+        info = (opts.app_label, getattr(opts, 'model_name', None) or getattr(opts, 'module_name', None))
+
+        return [
+            url(r'^(.+)/locking_variables\.js$',
+                wrap(locking_views.locking_js),
+                name="%s_%s_lock_js" % info),
+            url(r'^(.+)/lock/$',
+                wrap(locking_views.lock),
+                name="%s_%s_lock" % info),
+            url(r'^(.+)/lock_clear/$',
+                wrap(locking_views.lock_clear),
+                name="%s_%s_lock_clear" % info),
+            url(r'^(.+)/lock_remove/$',
+                wrap(locking_views.lock_remove),
+                name="%s_%s_lock_remove" % info),
+            url(r'^(.+)/lock_status/$',
+                wrap(locking_views.lock_status),
+                name="%s_%s_lock_status" % info),
+        ] + super(LockableAdminMixin, self).get_urls()
+
+    @csrf_protect_m
     def changelist_view(self, request, extra_context=None):
-        # we need the request objects in a few places where it's usually not present, 
-        # so we're tacking it on to the LockableAdmin class
-        self.request = request
-        return super(LockableAdmin, self).changelist_view(request, extra_context)
+        """
+        Append locking media to the changelist view.
 
-    def save_model(self, request, obj, form, change):
-        # object creation doesn't need/have locking in place
-        if obj.pk:
-            obj.unlock_for(request.user)
-        obj.save()
-        
-    def lock(self, obj):
-        if obj.is_locked:
-            seconds_remaining = obj.lock_seconds_remaining
-            minutes_remaining = seconds_remaining/60
-            locked_until = _("Still locked for %s minutes by %s") \
-                % (minutes_remaining, obj.locked_by)
-            if self.request.user == obj.locked_by: 
-                locked_until_self = _("You have a lock on this article for %s more minutes.") \
-                    % (minutes_remaining)
-                return '<img src="%slocking/img/page_edit.png" title="%s" />' \
-                    % (settings.MEDIA_URL, locked_until_self)
+        This method will not work properly on django <= 1.2
+        """
+        response = super(LockableAdminMixin, self).changelist_view(request, extra_context)
+        if isinstance(response, TemplateResponse):
+            try:
+                response.context_data['media'] += self.locking_media()
+            except KeyError:
+                pass
+        return response
+
+    def render_change_form(self, request, context, add=False, change=False, form_url='', obj=None):
+        if not add and getattr(obj, 'pk', None):
+            locking_media = self.locking_media(obj)
+            if isinstance(context['media'], str):
+                locking_media = str(locking_media)
+            context['media'] += locking_media
+        return super(LockableAdminMixin, self).render_change_form(
+                request, context, add=add, change=change, form_url=form_url, obj=obj
+        )
+
+    def get_form(self, request, obj=None, **kwargs):
+        kwargs['form'] = locking_form_factory(self.model, kwargs.get('form', self.form))
+        return super(LockableAdminMixin, self).get_form(request, obj, **kwargs)
+
+    def save_model(self, request, obj, *args, **kwargs):
+        """
+        Clears the lock owned by the current user, if it wasn't cleared on
+        unload, then saves the admin model instance.
+        """
+        if getattr(obj, 'pk', None):
+            try:
+                lock = Lock.objects.get_lock_for_object(obj)
+            except Lock.DoesNotExist:
+                pass
             else:
-                locked_until = _("Still locked for %s minutes by %s") \
-                    % (minutes_remaining, obj.locked_by)
-                return '<img src="%slocking/img/lock.png" title="%s" />' \
-                    % (settings.MEDIA_URL, locked_until)
+                if lock.is_locked and lock.is_locked_by(request.user):
+                    lock.unlock_for(request.user)
+        super(LockableAdminMixin, self).save_model(request, obj, *args, **kwargs)
 
+    def get_queryset(self, request):
+        """
+        Extended queryset method which adds a custom SQL select column,
+        `_locking_user_pk`, which is set to the pk of the current request's
+        user instance. Doing this allows us to access the user id by
+        obj._locking_user_pk for any object returned from this queryset.
+        """
+        if django.VERSION < (1, 7):
+            qs = super(LockableAdminMixin, self).queryset(request)
         else:
-            return ''
-    lock.allow_tags = True
-    
-    list_display = ('__str__', 'lock')
+            qs = super(LockableAdminMixin, self).get_queryset(request)
+        return qs.extra(select={
+            '_locking_user_pk': "%d" % request.user.pk,
+        })
+
+    if django.VERSION < (1, 7):
+        queryset = get_queryset
+
+    def get_lock_for_admin(self, obj):
+        """
+        Returns the locking status along with a nice icon for the admin
+        interface use in admin list display like so:
+        list_display = ['title', 'get_lock_for_admin']
+        """
+        current_user_id = obj._locking_user_pk
+
+        try:
+            lock = Lock.objects.get_lock_for_object(obj)
+        except Lock.DoesNotExist:
+            return ""
+        else:
+            if not lock.is_locked:
+                return ""
+
+        until = timeuntil(lock.lock_expiration_time)
+
+        locked_by_name = lock.locked_by.get_full_name()
+        if locked_by_name:
+            locked_by_name = "%(username)s (%(fullname)s)" % {
+                'username': lock.locked_by.get_username(),
+                'fullname': locked_by_name,
+            }
+        else:
+            locked_by_name = lock.locked_by.get_username()
+
+        if lock.locked_by.pk == current_user_id:
+            msg = _("You own this lock for %s longer") %  until
+            css_class = 'locking-edit'
+        else:
+            msg = _("Locked by %s for %s longer") % (locked_by_name, until)
+            css_class = 'locking-locked'
+
+        return html_utils.format_html(
+            '  <a href="#" title="{}"'
+            '     data-locked-obj-id="{}"'
+            '     data-locked-by="{}"'
+            '     class="locking-status {}"></a>',
+            html_utils.escape(msg),
+            obj.pk,
+            html_utils.escape(locked_by_name),
+            css_class,
+            )
+
+#    get_lock_for_admin.allow_tags = True
+    get_lock_for_admin.short_description = 'Lock'
 
 
-def get_lock_for_admin(self_obj, obj):
-	''' 
-	returns the locking status along with a nice icon for the admin interface 
-	use in admin list display like so: list_display = ['title', 'get_lock_for_admin']
-	'''
-	
-	locked_by = ''
-	
-	content_type = ContentType.objects.get_for_model(obj)
-	
-	try:
-		lock = Lock.objects.get(entry_id=obj.id, app=content_type.app_label, model=content_type.model)
-		class_name = 'locked'
-		locked_by = lock.locked_by.display_name
-	except Lock.DoesNotExist:
-		class_name = 'unlocked'
-	
-	img_path = 	settings.ADMIN_MEDIA_PREFIX + 'blog/img/'
-	
-	output = str(obj.id)
-	
-	if self_obj.request.user.has_perm(u'blog.unlock_post'): 
-	
-		return u'<a href="#" class="lock-status %s" title="Locked By: %s">%s</a>' % (class_name, locked_by, output)
-	else: 
-		return u'<span class="lock-status %s" title="Locked By: %s">%s</span>' % (class_name, locked_by, output)
-		
-get_lock_for_admin.allow_tags = True
-get_lock_for_admin.short_description = 'Lock'
+class LockableAdmin(LockableAdminMixin, admin.ModelAdmin):
+    pass
+
+# Temporary for Diagnostics: (RCooke)
+from .models import Lock
+
+class LockAdmin(admin.ModelAdmin):
+  fields = (
+    'content_type',
+    'object_id',
+    '_locked_at',
+    '_locked_by',
+    '_hard_lock',
+    'lock_seconds_remaining',
+    )
+  readonly_fields = (
+    '_locked_at',
+    '_locked_by',
+    '_hard_lock',
+    'lock_seconds_remaining',
+    )
+
+
+admin.site.register(Lock, LockAdmin)
+

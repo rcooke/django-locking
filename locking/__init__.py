@@ -1,9 +1,6 @@
-VERSION = (0, 3, 0)
+import pkg_resources
 
-from django.conf import settings
-import logging
-import urls
-
-LOCK_TIMEOUT = getattr(settings, 'LOCK_TIMEOUT', 1800)
-
-logger = logging.getLogger('django.locker')
+try:
+    __version__ = pkg_resources.get_distribution('django-locking').version
+except pkg_resources.DistributionNotFound:
+    __version__ = None
