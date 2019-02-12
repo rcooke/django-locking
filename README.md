@@ -8,7 +8,7 @@ Django has seen great adoption in the content management sphere, especially amon
 
 ``django-locking`` makes sure no two users can edit the same content at the same time, preventing annoying overwrites and lost time. Find the repository and download the code at http://github.com/stdbrouw/django-locking
 
-This version of ``django-locking`` is intended to work with Django 1.6-1.7, although it's only been tested cursorily and probably shouldn't be relied on without reading the code, then having a good sit down with a cup of tea and a hard think.
+This version of ``django-locking`` is intended to work with Python 3.6 and Django 2.0 and probably shouldn't be relied on without reading the code and commit comments, then having a good sit down with a cup of tea and a hard think.
 
 Credit
 ------
@@ -25,7 +25,7 @@ Major features
 
 Changes on change list pages
 ----------------------------
-    
+
 Unlock content object from change list page by simply clicking on the lock icon
 _______________________________________________________________________________
 
@@ -36,7 +36,7 @@ _____________________________________________________
 
 ![expire status](https://github.com/RobCombs/django-locking/raw/master/docs/screenshots/expire_status.png)
 
-Hover over the username by the lock icon to see the full name of the person who has locked the content object 
+Hover over the username by the lock icon to see the full name of the person who has locked the content object
 _____________________________________________________________________________________________________________
 
 ![lock_by_who](https://github.com/RobCombs/django-locking/raw/master/docs/screenshots/lock_by_who.png)
@@ -93,7 +93,7 @@ Refactored and cleaned up code for easier maintainability
 2) Add locking to the list of INSTALLED_APPS in project settings file; you also need `django.contrib.staticfiles` (probably already there):
 
     INSTALLED_APPS = ('locking', 'django.contrib.staticfiles')
-    
+
 3) Add locking to the admin files that you want locking for:
 
     from locking.admin import LockableAdmin
@@ -116,7 +116,7 @@ That's it!
 Checking the installation
 -------------------------
 Simulate a lock situation -> Open 2 browsers and hit your admin site with one user logged into the 1st browser and
-other user logged into the other.  Go to the model in the admin that you've installed locking for with one browser.  
+other user logged into the other.  Go to the model in the admin that you've installed locking for with one browser.
 On the other browser, go to the change list/change view pages of the model that you've installed django-locking for.
 You'll see locks in the interface similar to the screen shots above.
 
@@ -135,7 +135,7 @@ Example:
     class YourAdmin(LockableAdmin):
      list_display = ('get_lock_for_admin')
      form = LockingForm
-     
+
 Note: if you have an existing form and clean method, then call super to invoke the LockingForm's clean method
 
 Example:
