@@ -1,4 +1,3 @@
-=======================================
 Concurrency control with django-locking
 =======================================
 
@@ -15,10 +14,10 @@ Credit
 
 This code is basically a composition of the following repos with a taste of detailed descretion from me. Credit goes out to the following authors and repos for their contributions:
 
-https://github.com/stdbrouw/django-locking
-https://github.com/runekaagaard/django-locking
-https://github.com/theatlantic/django-locking
-https://github.com/ortsed/django-locking
+ - https://github.com/stdbrouw/django-locking
+ - https://github.com/runekaagaard/django-locking
+ - https://github.com/theatlantic/django-locking
+ - https://github.com/ortsed/django-locking
 
 Major features
 ==============
